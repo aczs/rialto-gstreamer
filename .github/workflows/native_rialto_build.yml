@@ -14,6 +14,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          path: './rialto-gstreamer'
+    
+      - name: Checkout rialto
+        uses: actions/checkout@v3
+        with:
+          repository: rdkcentral/rialto
+          path: './rialto'
 
       - name: Install Dependencies
         run: |
@@ -31,7 +39,6 @@ jobs:
           RIALTO_NATIVE_INSTALL_DIR="$PWD/rialto-native"
           echo $RIALTO_NATIVE_INSTALL_DIR
           mkdir $RIALTO_NATIVE_INSTALL_DIR
-          git clone https://github.com/rdkcentral/rialto.git rialto
           cd rialto
           cmake . -B build -DCMAKE_INSTALL_PREFIX=$RIALTO_NATIVE_INSTALL_DIR -DNATIVE_BUILD=ON -DRIALTO_BUILD_TYPE="Debug" &> output_file.txt
           
@@ -42,6 +49,7 @@ jobs:
             exit 1
           fi
           cd ..
+          cd rialto-gstreame
           cmake . -B build -DCMAKE_INCLUDE_PATH="${RIALTO_NATIVE_INSTALL_DIR}/include" -DCMAKE_LIBRARY_PATH="${RIALTO_NATIVE_INSTALL_DIR}/lib" -DNATIVE_BUILD=ON -DRIALTO_BUILD_TYPE="Debug" &> output_file.txt
           make -C build &> output_file.txt
           
