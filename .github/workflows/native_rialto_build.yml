@@ -1,0 +1,60 @@
+name: Native Rialto Build
+
+on:
+  pull_request:
+    branches: [ "master", "rdkcentral:master" ]
+  push:
+    branches: [ "master", "rdkcentral:master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential
+          sudo apt-get install cmake
+          sudo apt-get install libunwind-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev libgstreamer1.0-dev
+
+      - name: Install protobuf
+        run: |
+          sudo apt-get install protobuf-compiler
+
+      - name: Build Rialto
+        run: |
+          RIALTO_NATIVE_INSTALL_DIR="$PWD/rialto-native"
+          echo $RIALTO_NATIVE_INSTALL_DIR
+          mkdir $RIALTO_NATIVE_INSTALL_DIR
+          git clone https://github.com/rdkcentral/rialto.git rialto
+          cd rialto
+          cmake . -B build -DCMAKE_INSTALL_PREFIX=$RIALTO_NATIVE_INSTALL_DIR -DNATIVE_BUILD=ON -DRIALTO_BUILD_TYPE="Debug" &> output_file.txt
+          
+          if [ $? -eq 0 ]
+          then
+            make -C build install &>> output_file.txt
+          else
+            exit 1
+          fi
+          cd ..
+          cmake . -B build -DCMAKE_INCLUDE_PATH="${RIALTO_NATIVE_INSTALL_DIR}/include" -DCMAKE_LIBRARY_PATH="${RIALTO_NATIVE_INSTALL_DIR}/lib" -DNATIVE_BUILD=ON -DRIALTO_BUILD_TYPE="Debug" &> output_file.txt
+          make -C build &> output_file.txt
+          
+      - name: Report Build Status Success
+        if: success()
+        run: |
+          echo "Build Succeeded!"
+          exit 0
+
+      - name: Upload Logs on Failure
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: Output Logs
+          path: |
+            output_file.txt
