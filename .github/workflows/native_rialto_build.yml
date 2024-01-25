@@ -36,22 +36,24 @@ jobs:
 
       - name: Build Rialto
         run: |
+          WORK_DIR=$PWD
           RIALTO_NATIVE_INSTALL_DIR="$PWD/rialto-native"
           echo $RIALTO_NATIVE_INSTALL_DIR
           mkdir $RIALTO_NATIVE_INSTALL_DIR
           cd rialto
-          cmake . -B build -DCMAKE_INSTALL_PREFIX=$RIALTO_NATIVE_INSTALL_DIR -DNATIVE_BUILD=ON -DRIALTO_BUILD_TYPE="Debug" | tee -a output_file.txt
+          cmake . -B build -DCMAKE_INSTALL_PREFIX=$RIALTO_NATIVE_INSTALL_DIR -DNATIVE_BUILD=ON -DRIALTO_BUILD_TYPE="Debug" | tee -a $WORK_DIR/output_file.txt
           
           if [ $? -eq 0 ]
           then
-            make -C build install | tee -a output_file.txt
+            make -C build install | tee -a $WORK_DIR/output_file.txt
           else
             exit 1
           fi
           cd ..
+          
           cd rialto-gstreamer
-          cmake . -B build -DCMAKE_INCLUDE_PATH="${RIALTO_NATIVE_INSTALL_DIR}/include" -DCMAKE_LIBRARY_PATH="${RIALTO_NATIVE_INSTALL_DIR}/lib" -DNATIVE_BUILD=ON -DRIALTO_BUILD_TYPE="Debug" | tee -a output_file.txt
-          make -C build | tee -a output_file.txt
+          cmake . -B build -DCMAKE_INCLUDE_PATH="${RIALTO_NATIVE_INSTALL_DIR}/include" -DCMAKE_LIBRARY_PATH="${RIALTO_NATIVE_INSTALL_DIR}/lib" -DNATIVE_BUILD=ON -DRIALTO_BUILD_TYPE="Debug" | tee -a $WORK_DIR/output_file.txt
+          make -C build | tee -a $WORK_DIR/output_file.txt
           cd ..
           
       - name: Report Build Status Success
